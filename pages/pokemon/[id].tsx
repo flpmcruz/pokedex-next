@@ -101,6 +101,7 @@ const PokemonPage: NextPage<Props> = ({pokemon}) => {
 
 export default PokemonPage
 
+/* El getStaticPaths siempre necesita al getStaticProps pero no viceversa*/
 
 export const getStaticPaths : GetStaticPaths = async (ctx) => {
 
@@ -110,7 +111,8 @@ export const getStaticPaths : GetStaticPaths = async (ctx) => {
     paths: pokemons151.map( id => ({
       params: { id }
     })),
-    fallback: false
+    //fallback: false //muestra 404 si no existe
+    fallback: 'blocking' //intenta servir el contenido aunque no este generado en el server
   }
 }
 
@@ -119,9 +121,19 @@ export const getStaticProps: GetStaticProps = async ({params}) => {
   const { id } = params as { id: string}
   const pokemon = await getPokemonInfo(id)
 
+  if(!pokemon) {
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false
+      }
+    }
+  }
+
   return {
     props: {
       pokemon
-    }
+    },
+    revalidate: 86400 // In Seconds = 1d
   }
 }
